@@ -1,23 +1,14 @@
 machine:
-  services:
-    - docker
+  node:
+    version: 0.10.36
 
 dependencies:
-  override:
-    - docker info
-    - docker build -t ongoworks/reaction:latest .
+  cache_directories:
+    - /tmp/reaction-packages
+  pre:
+    - meteor update || curl https://install.meteor.com | /bin/sh
+    - ./bin/clone-packages.sh
 
 test:
   override:
-    - docker run -d -p 3000:3000 ongoworks/reaction; sleep 10
-    - curl --retry 10 --retry-delay 5 -v http://localhost:3000
-
-deployment:
-  hub:
-    branch: master
-    commands:
-      - $DEPLOY
-
-notify:
-  webhooks:
-    - url: https://webhooks.gitter.im/e/d7372b8add1c57bc8d96
+    - VELOCITY_TEST_PACKAGES=1 meteor test-packages --driver-package velocity:html-reporter --velocity --release velocity:METEOR@1.1.0.2_3
